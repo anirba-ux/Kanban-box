@@ -7,30 +7,69 @@ const columns = [todo, progress, done];
 
 let dragElement = null;
 
+
 function addTask(title,desc,column){
-    const div = document.createElement("div")
 
-    div.classList.add("task")
-    div.setAttribute("draggable", "true")
+const div = document.createElement("div");
 
-    div.innerHTML = `
-    <h2>${title}</h2>
-    <p>${desc}</p>
-    <button>Delete</button>`
-    column.appendChild(div)
+div.classList.add("task");
+div.setAttribute("draggable","true");
 
-    div.addEventListener("drag", (e) => {
-       dragElement = div;
-    })
+div.innerHTML=`
+<h2>${title}</h2>
+<p>${desc}</p>
+<button>Delete</button>
+`;
 
-    const deleteButton = div.querySelector("button");
-    deleteButton.addEventListener("click", () => {
-        div.remove();
-        updateTaskCount();
-    })
+column.appendChild(div);
 
-    return div;
+
+/* Desktop Drag (আগের মতোই) */
+div.addEventListener("drag",()=>{
+dragElement=div;
+});
+
+
+/* Mobile Tap Move */
+div.addEventListener("click",(e)=>{
+
+// delete button click হলে move করবে না
+if(e.target.tagName==="BUTTON") return;
+
+if(window.innerWidth<=768){
+
+if(div.parentElement.id==="todo"){
+progress.appendChild(div);
 }
+
+else if(div.parentElement.id==="progress"){
+done.appendChild(div);
+}
+
+else if(div.parentElement.id==="done"){
+todo.appendChild(div);
+}
+
+updateTaskCount();
+
+}
+
+});
+
+
+/* Delete */
+const deleteButton=div.querySelector("button");
+
+deleteButton.addEventListener("click",()=>{
+div.remove();
+updateTaskCount();
+});
+
+
+return div;
+
+}
+
 
 function updateTaskCount() {
     columns.forEach(col => {
@@ -137,3 +176,38 @@ addTaskButton.addEventListener("click", () => {
 });
 
 /* Modal related logic */
+
+/* Swipe control logic */
+
+const boardWrapper = document.querySelector('.board-wrapper');
+
+let isDown=false;
+let startX;
+let scrollLeft;
+
+boardWrapper.addEventListener('touchstart',()=>{
+ boardWrapper.style.scrollBehavior='smooth';
+});
+
+// mouse drag swipe desktop testing
+boardWrapper.addEventListener('mousedown',(e)=>{
+ isDown=true;
+ startX=e.pageX-boardWrapper.offsetLeft;
+ scrollLeft=boardWrapper.scrollLeft;
+})
+
+boardWrapper.addEventListener('mouseleave',()=>{
+ isDown=false;
+})
+
+boardWrapper.addEventListener('mouseup',()=>{
+ isDown=false;
+})
+
+boardWrapper.addEventListener('mousemove',(e)=>{
+ if(!isDown) return;
+ e.preventDefault();
+ const x=e.pageX-boardWrapper.offsetLeft;
+ const walk=(x-startX)*2;
+ boardWrapper.scrollLeft=scrollLeft-walk;
+})
